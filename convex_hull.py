@@ -109,11 +109,11 @@ class ConvexHullSolver(QObject):
         # the node of the left most point on the right hull
         right_Node = rightHull.leftMost
         # the point of the rightmost point of the left hull
-        rightPoint = leftHull.rightMost.point
+        tempLeftPoint = leftHull.rightMost.point
         # the point of the leftmost point of the right hull
-        leftPoint = rightHull.leftMost.point
+        tempRightPoint = rightHull.leftMost.point
         # the slope of the two initial points
-        temp = self.getSlope(leftPoint, rightPoint)
+        temp = self.getSlope(tempRightPoint, tempLeftPoint)
         done = 0
 
         while done == 0:
@@ -123,15 +123,15 @@ class ConvexHullSolver(QObject):
                 # set the node to the counter clockwise node
                 left_Node = left_Node.counter_node
                 # set the point to the counter clockwise point
-                counter_point = left_Node.counter_node.point
+                counter_point = left_Node.point
                 # calculate the new slope that is between the new point and the leftmost point of the right hull
-                new_slope = self.getSlope(leftPoint, counter_point)
+                new_slope = self.getSlope(tempRightPoint, counter_point)
                 # if the new slope is less than the previous one continue
                 if new_slope < temp:
                     # set temp to the new slope
                     temp = new_slope
                     # change the point to the counter clockwise point of the left hull
-                    rightPoint = counter_point
+                    tempLeftPoint = counter_point
                     done = 0
                 else:
                     # if it is greater than the previous slope set the left node to the clockwise node
@@ -142,15 +142,15 @@ class ConvexHullSolver(QObject):
                 # set the right node to the clockwise node of the right hull
                 right_Node = right_Node.clockwise_node
                 # set the point to the clockwise point of the right hull
-                clockwise_point = right_Node.clockwise_node.point
+                clockwise_point = right_Node.point
                 # calculate the slope of the two points
-                new_slope = self.getSlope(clockwise_point, rightPoint)
+                new_slope = self.getSlope(clockwise_point, tempLeftPoint)
                 # if the new slope is greater than the old slope
                 if new_slope > temp:
                     # set temp to the new slope
                     temp = new_slope
                     # set the left point of the right hull to the clockwise point
-                    leftPoint = clockwise_point
+                    tempRightPoint = clockwise_point
                     done = 0
                 else:
                     # if it is greater than the previous slope set the right node to the counter clockwise node
@@ -168,11 +168,11 @@ class ConvexHullSolver(QObject):
         # the node of the left most point on the right hull
         right_Node = rightHull.leftMost
         # the point of the rightmost point of the left hull
-        rightPoint = leftHull.rightMost.point
+        tempLeftPoint = leftHull.rightMost.point
         # the point of the leftmost point of the right hull
-        leftPoint = rightHull.leftMost.point
+        tempRightPoint = rightHull.leftMost.point
         # the slope of the two initial points
-        temp = self.getSlope(leftPoint, rightPoint)
+        temp = self.getSlope(tempRightPoint, tempLeftPoint)
         done = 0
 
         while done == 0:
@@ -182,15 +182,15 @@ class ConvexHullSolver(QObject):
                 # set the node to the clockwise node
                 left_Node = left_Node.clockwise_node
                 # set the point to the clockwise point
-                clockwise_point = left_Node.clockwise_node.point
+                clockwise_point = left_Node.point
                 # calculate the new slope that is between the new point and the leftmost point of the right hull
-                new_slope = self.getSlope(leftPoint, clockwise_point)
+                new_slope = self.getSlope(tempRightPoint, clockwise_point)
                 # if the new slope is greater than the previous one continue
                 if new_slope > temp:
                     # set temp to the new slope
                     temp = new_slope
                     # change the point to the clockwise point of the left hull
-                    rightPoint = clockwise_point
+                    tempLeftPoint = clockwise_point
                     done = 0
                 else:
                     # if it is less than the previous slope set the left node to the counter clockwise node
@@ -201,15 +201,15 @@ class ConvexHullSolver(QObject):
                 # set the right node to the counter clockwise node of the right hull
                 right_Node = right_Node.counter_node
                 # set the point to the counter clockwise point of the right hull
-                counter_point = right_Node.counter_node.point
+                counter_point = right_Node.point
                 # calculate the slope of the two points
-                new_slope = self.getSlope(counter_point, rightPoint)
+                new_slope = self.getSlope(counter_point, tempLeftPoint)
                 # if the new slope is less than the old slope
                 if new_slope < temp:
                     # set temp to the new slope
                     temp = new_slope
                     # set the left point of the right hull to the counter clockwise point
-                    leftPoint = counter_point
+                    tempRightPoint = counter_point
                     done = 0
                 else:
                     # if it is greater than the previous slope set the right node to the counter clockwise node
@@ -226,26 +226,33 @@ class ConvexHullSolver(QObject):
         return slope
 
     def combine(self, upperTangent, lowerTangent, leftHull, rightHull):
+        # Get the left hull and right hull upper tangent points
         upperLeft = upperTangent[0]
         upperRight = upperTangent[1]
 
+        # set the nodes to continue the circle
         upperLeft.clockwise_node = upperRight
         upperRight.counter_node = upperLeft
 
+        # get the left and right hull lower tangent points
         lowerLeft = lowerTangent[0]
         lowerRight = lowerTangent[1]
 
+        # set the nodes to continue the circle
         lowerLeft.counter_node = lowerRight
         lowerRight.clockwise_node = lowerLeft
 
+        # set the final hull to equal the left most point and the right most point and garbage collection finishes
         finalHull = Hull()
         finalHull.leftMost = leftHull.leftMost
         finalHull.rightMost = rightHull.rightMost
         return finalHull
 
     def drawPoints(self, finalHull):
+        # set the left most point and temp to the counter clockwise node
         leftMostPoint = finalHull.leftMost
         temp = leftMostPoint.counter_node
+        # draw the line and then continue drawing lines till you get to the left most point
         polygon = [QLineF(leftMostPoint.point, temp.point)]
         while temp.point != leftMostPoint.point:
             polygon.append(QLineF(temp.point, temp.counter_node.point))
